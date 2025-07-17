@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Runescape tracker": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
