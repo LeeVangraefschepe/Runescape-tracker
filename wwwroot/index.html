@@ -7,35 +7,58 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #f9f9f9;
-            padding: 20px;
-        }
-        h1 {
-            font-size: 24px;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 300px;
-            margin-bottom: 40px;
-        }
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Skill XP Over Time - lee_vgs</h1>
+    <div class="sidebar">
+        <h2>Accounts</h2>
+        <div class="nav-link active" data-target="lee_vgs" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">lee_vgs</div>
+        <div class="nav-link" data-target="tomaatje2002" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">tomaatje2002</div>
+        <div class="nav-link" data-target="StellaArtois" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">StellaArtois</div>
+    </div>
+    
+      <div class="main-content">
+
+<h1 id="content-title">Skill XP Over Time - lee_vgs</h1>
 <div id="charts"></div>
 
 <script>
-    async function fetchData() {
-        const res = await fetch('http://localhost:999/api/skillvalues?username=lee_vgs');
+    function switchSection(element) {
+      // Update sidebar active
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+      });
+      element.classList.add('active');
+
+      // Show corresponding section
+      const target = element.getAttribute('data-target');
+      console.log(target);
+      document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+      });
+
+      // Remove all charts
+      document.getElementById('charts').innerHTML = '';
+
+      // Set new title
+      document.getElementById('content-title').innerHTML = `Skill XP Over Time - ${target}`;
+
+      // Fetch new ones
+        fetchData(target).then(data => {
+            const skillData = processData(data);
+            Object.entries(skillData).forEach(([skill, points]) => {
+                drawChart(skill, points);
+            });
+        }).catch(err => {
+            console.error(err);
+        });
+    }
+</script>
+
+<script>
+    async function fetchData(username) {
+        const res = await fetch(`http://localhost:999/api/skillvalues?username=${username}`);
         return await res.json();
     }
 
@@ -70,7 +93,7 @@
                     const x = (chartArea.left + chartArea.right) / 2 - size / 2;
                     const y = (chartArea.top + chartArea.bottom) / 2 - size / 2;
                     ctx.save();
-                    ctx.globalAlpha = 0.07;
+                    ctx.globalAlpha = 0.2;
                     ctx.drawImage(icon, x, y, size, size);
                     ctx.restore();
                 }
@@ -138,7 +161,7 @@
         return skillMap;
     }
 
-    fetchData().then(data => {
+    fetchData('lee_vgs').then(data => {
         const skillData = processData(data);
         Object.entries(skillData).forEach(([skill, points]) => {
             drawChart(skill, points);

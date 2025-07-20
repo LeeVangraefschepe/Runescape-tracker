@@ -1,0 +1,131 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  #charts > div {
+  height: 200px;
+  margin-bottom: 2rem;
+}
+
+canvas {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+  body {
+    display: flex;
+    font-family: Arial, sans-serif;
+    height: 100vh;
+    background: #beaa89 url('images/parchment.jpg') repeat 0 0
+  }
+
+  .sidebar {
+    width: 220px;
+    background-color: #040b11;
+    background: transparent url('images/content_repeat_y.jpg') repeat 0 0;    ;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    color: white;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar h2 {
+    font-size: 1.2em;
+    background: transparent url('images/sidebar-header.png') no-repeat right center;
+    color: #e1bb34;
+    font-weight: bold;
+    font-family: "cinze1";
+    padding: 20px 20px;
+  }
+
+  .nav-link {
+display: flex;
+align-items: center;
+gap: 10px; /* space between icon and text */
+padding: 12px 20px;
+text-decoration: none;
+color: white;
+transition: background 0.3s;
+background: transparent url('images/main_sprite2.png') repeat-x 0 -483px;
+cursor: pointer;
+}
+
+.nav-icon {
+width: 30px;
+height: 30px;
+object-fit: contain;
+background: linear-gradient(#010b10, #02131a);
+border: 1px solid #2c3d49;
+border-radius: 50%;
+box-shadow: inset 0 0 5px 5px #141414, 0 0 5px 5px rgba(0, 0, 0, .3);
+clear: both;
+}
+
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: #e1bb34;
+  }
+
+  .main-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+  }
+
+  .content-section {
+    display: none;
+  }
+
+  .content-section.active {
+    display: block;
+  }
+
+  /* Twitch-like grid for stream previews */
+  .stream-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .stream-card {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.2s;
+    width: 20%;
+    margin-right: 5%;
+    margin-bottom: 20px;
+    float:left;
+  }
+
+  .stream-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .stream-video {
+    width: 100%;
+    height: 160px;
+    background: #000;
+  }
+
+  .stream-info {
+    padding: 10px;
+  }
+
+  .stream-title {
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  .stream-desc {
+    font-size: 0.9em;
+    color: #555;
+  }
