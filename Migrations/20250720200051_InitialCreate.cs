@@ -13,6 +13,19 @@ namespace Runescape_tracker.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Fetches",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    FetchTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Fetches", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
@@ -26,31 +39,12 @@ namespace Runescape_tracker.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Fetches",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    UserId = table.Column<int>(type: "integer", nullable: false),
-                    FetchTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Fetches", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Fetches_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Skills",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    UserId = table.Column<int>(type: "integer", nullable: false),
                     FetchId = table.Column<int>(type: "integer", nullable: false),
                     TotalXp = table.Column<long>(type: "bigint", nullable: false)
                 },
@@ -61,6 +55,12 @@ namespace Runescape_tracker.Migrations
                         name: "FK_Skills_Fetches_FetchId",
                         column: x => x.FetchId,
                         principalTable: "Fetches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Skills_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -88,15 +88,14 @@ namespace Runescape_tracker.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Fetches_UserId",
-                table: "Fetches",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Skills_FetchId",
                 table: "Skills",
-                column: "FetchId",
-                unique: true);
+                column: "FetchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Skills_UserId",
+                table: "Skills",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SkillXp_SkillsId",

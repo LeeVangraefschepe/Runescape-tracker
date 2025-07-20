@@ -1,7 +1,7 @@
-﻿namespace Runescape_tracker.Database
-{
-    using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
+namespace Runescape_tracker.Database
+{
     public class AppDbContext : DbContext
     {
         public DbSet<User> Users => Set<User>();
@@ -15,22 +15,26 @@
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<Fetch>()
-                .HasOne(f => f.User)
-                .WithMany(u => u.Fetches)
-                .HasForeignKey(f => f.UserId)
+            // User → Skill
+            modelBuilder.Entity<Skills>()
+                .HasOne(s => s.User)
+                .WithMany(u => u.Skills)
+                .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Fetch>()
-                .HasOne(f => f.Skills)
-                .WithOne(s => s.Fetch)
-                .HasForeignKey<Skills>(s => s.FetchId)
+            // Fetch → Skill
+            modelBuilder.Entity<Skills>()
+                .HasOne(s => s.Fetch)
+                .WithMany(f => f.Skills)
+                .HasForeignKey(s => s.FetchId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // Skill → SkillXp
             modelBuilder.Entity<SkillXp>()
-                .HasOne(sx => sx.Skills)
-                .WithMany(s => s.SkillXpEntries)
-                .HasForeignKey(sx => sx.SkillsId);
+                .HasOne(xp => xp.Skills)
+                .WithMany(s => s.SkillXps)
+                .HasForeignKey(xp => xp.SkillsId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

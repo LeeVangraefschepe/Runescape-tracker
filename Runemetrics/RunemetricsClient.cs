@@ -17,32 +17,36 @@ namespace Runescape_tracker.Runemetrics
 
         public async Task<int> FetchAPI()
         {
-            int updatedUserCount = 0;
+            // Prepare potential fetch data
+            List<Skills> newRecords = new List<Skills>();
+            var fetch = new Fetch
+            {
+                FetchTime = DateTime.UtcNow
+            };
 
             // Query users
-            var users = await db.Users
-                .Include(u => u.Fetches)
-                .ThenInclude(f => f.Skills)
-                .ThenInclude(s => s.SkillXpEntries)
-                .ToListAsync();
-
+            var users = await db.Users.ToListAsync();
             foreach (var user in users)
             {
                 // Fetch user data from Runescape API
                 var result = await GetProfileAsync(user.Name);
 
-                // Get latest for all skills
-                var latestFetches = user.Fetches
-                    .OrderByDescending(f => f.FetchTime);
+                // Query Fetches -> Skills -> Xp on Username
+                var userSkills = await db.Skills
+                    .Include(s => s.SkillXps)
+                    .Include(s => s.Fetch)
+                    .Where(s => s.UserId == user.Id)
+                    .OrderByDescending(s => s.Fetch.FetchTime)
+                    .ToListAsync();
 
                 // Get all latest skill values
                 Dictionary<Skill, long> storedSkillValues = new Dictionary<Skill, long>();
                 foreach (Skill skillEnum in Enum.GetValues(typeof(Skill)))
                 {
                     bool found = false;
-                    foreach (var latestFetch in latestFetches)
+                    foreach (var userSkillsRecord in userSkills)
                     {
-                        foreach (var skillXpEntry in latestFetch.Skills.SkillXpEntries)
+                        foreach (var skillXpEntry in userSkillsRecord.SkillXps)
                         {
                             if (skillXpEntry.Skill != skillEnum) continue;
 
@@ -55,15 +59,10 @@ namespace Runescape_tracker.Runemetrics
                     }
                 }
 
-                var fetch = new Fetch
-                {
-                    UserId = user.Id,
-                    FetchTime = DateTime.UtcNow
-                };
-
                 var skills = new Skills
                 {
                     Fetch = fetch,
+                    UserId = user.Id,
                     TotalXp = result.TotalXp,
                 };
 
@@ -98,17 +97,36 @@ namespace Runescape_tracker.Runemetrics
                     }
                 }
 
-                if (skillEntries.Count == 0) continue;
+                // Assign all xp changes
+                skills.SkillXps = skillEntries;
 
-                ++updatedUserCount;
-
-                skills.SkillXpEntries = skillEntries;
-
-                db.Skills.Add(skills);
-                await db.SaveChangesAsync();
+                // Add to new records
+                newRecords.Add(skills);
             }
 
-            return updatedUserCount;
+            // Check if any changes
+            bool changes = false;
+            foreach (var record in newRecords)
+            {
+                if (record.SkillXps.Count == 0) continue;
+                changes = true;
+                break;
+            }
+            if (!changes) return 0;
+
+            // Apply new data towards database
+            try
+            {
+                db.Skills.AddRange(newRecords);
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine("DB Save Error: " + ex.InnerException?.Message ?? ex.Message);
+                throw;
+            }
+
+            return newRecords.Count;
         }
 
         public async Task<PlayerData> GetProfileAsync(string username)

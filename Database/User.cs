@@ -3,9 +3,9 @@
     public class User
     {
         public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
+        public string Name { get; set; }
 
-        // No database field
-        public List<Fetch> Fetches { get; set; } = new();
+        // Navigation property
+        public ICollection<Skills> Skills { get; set; }
     }
 }

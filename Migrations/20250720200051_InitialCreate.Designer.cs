@@ -12,7 +12,7 @@ using Runescape_tracker.Database;
 namespace Runescape_tracker.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250719154438_InitialCreate")]
+    [Migration("20250720200051_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -36,12 +36,7 @@ namespace Runescape_tracker.Migrations
                     b.Property<DateTime>("FetchTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Fetches");
                 });
@@ -87,10 +82,14 @@ namespace Runescape_tracker.Migrations
                     b.Property<long>("TotalXp")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FetchId")
-                        .IsUnique();
+                    b.HasIndex("FetchId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Skills");
                 });
@@ -112,21 +111,10 @@ namespace Runescape_tracker.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Runescape_tracker.Database.Fetch", b =>
-                {
-                    b.HasOne("Runescape_tracker.Database.User", "User")
-                        .WithMany("Fetches")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Runescape_tracker.Database.SkillXp", b =>
                 {
                     b.HasOne("Runescape_tracker.Database.Skills", "Skills")
-                        .WithMany("SkillXpEntries")
+                        .WithMany("SkillXps")
                         .HasForeignKey("SkillsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -137,12 +125,20 @@ namespace Runescape_tracker.Migrations
             modelBuilder.Entity("Runescape_tracker.Database.Skills", b =>
                 {
                     b.HasOne("Runescape_tracker.Database.Fetch", "Fetch")
-                        .WithOne("Skills")
-                        .HasForeignKey("Runescape_tracker.Database.Skills", "FetchId")
+                        .WithMany("Skills")
+                        .HasForeignKey("FetchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Runescape_tracker.Database.User", "User")
+                        .WithMany("Skills")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Fetch");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Runescape_tracker.Database.Fetch", b =>
@@ -152,12 +148,12 @@ namespace Runescape_tracker.Migrations
 
             modelBuilder.Entity("Runescape_tracker.Database.Skills", b =>
                 {
-                    b.Navigation("SkillXpEntries");
+                    b.Navigation("SkillXps");
                 });
 
             modelBuilder.Entity("Runescape_tracker.Database.User", b =>
                 {
-                    b.Navigation("Fetches");
+                    b.Navigation("Skills");
                 });
 #pragma warning restore 612, 618
         }

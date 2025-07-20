@@ -85,26 +85,25 @@ namespace Runescape_tracker
             {
                 await using var db = new AppDbContext(dbOptions);
 
-                var user = await db.Users
-                    .Include(u => u.Fetches)
-                    .ThenInclude(f => f.Skills)
-                    .ThenInclude(s => s.SkillXpEntries)
-                    .FirstOrDefaultAsync(u => u.Name == username);
+                var user = await db.Users.FirstOrDefaultAsync(u => u.Name == username);
 
                 if (user == null)
                     return Results.NotFound("User not found");
 
-                var fetches = user.Fetches
-                    .Where(f =>
-                        (!from.HasValue || f.FetchTime >= from.Value) &&
-                        (!to.HasValue || f.FetchTime <= to.Value))
-                    .OrderBy(f => f.FetchTime)
-                    .ToList();
+                var userSkills = await db.Skills
+                    .Include(s => s.SkillXps)
+                    .Include(s => s.Fetch)
+                    .Where(s => s.UserId == user.Id)
+                    .Where(s =>
+                        (!from.HasValue || s.Fetch.FetchTime >= from.Value) &&
+                        (!to.HasValue || s.Fetch.FetchTime <= to.Value))
+                    .OrderBy(s => s.Fetch.FetchTime)
+                    .ToListAsync();
 
-                var result = fetches.Select(f => new
+                var result = userSkills.Select(s => new
                 {
-                    timestamp = f.FetchTime,
-                    skillXp = f.Skills.SkillXpEntries.ToDictionary(x => x.Skill.ToString(), x => x.Xp)
+                    timestamp = s.Fetch.FetchTime,
+                    skillXp = s.SkillXps.ToDictionary(x => x.Skill.ToString(), x => x.Xp)
                 }).ToList();
 
                 var lastResult = result.Last();
@@ -138,6 +137,5 @@ namespace Runescape_tracker
 
             app.Run("http://localhost:999");
         }
-
     }
 }
