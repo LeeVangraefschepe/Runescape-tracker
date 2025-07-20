@@ -1,0 +1,49 @@
+﻿body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f7fa;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    padding: 30px 0;
+    background: linear-gradient(90deg, #4f46e5, #3b82f6);
+    color: white;
+    margin: 0;
+    font-size: 2rem;
+}
+
+#filter-container {
+    text-align: center;
+    margin: 20px auto 0;
+}
+
+#filter {
+    padding: 8px 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.charts {
+    max-width: 94%;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.chart-container {
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    height: 800px; /* Set consistent height */
+    position: relative; /* Needed for responsive canvas */
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important; /* Match container */
+}

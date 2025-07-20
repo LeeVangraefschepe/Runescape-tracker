@@ -1,0 +1,356 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skill differences</title>
+    <link rel="icon" href="https://runescape.wiki/images/thumb/Statistics.png/21px-Statistics.png?72ca5" type="image/png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link href="styls.css" rel="stylesheet" />
+</head>
+<body>
+    <h1>Skill Differences Over Time</h1>
+
+    <div id="filter-container">
+        <label for="filter">Filter charts:</label>
+        <select id="filter">
+            <option value="all">All</option>
+            <option value="positive">Positive Only</option>
+            <option value="negative">Negative Only</option>
+        </select>
+
+        <br />
+
+        <label for="start-date">Start:</label>
+        <input type="date" id="start-date">
+
+        <label for="end-date">End:</label>
+        <input type="date" id="end-date">
+
+        <button id="apply-date-filter">Apply</button>
+    </div>
+
+    <div id="charts" class="charts"></div>
+
+    <script>
+        async function fetchData() {
+            const response = await fetch('/api/differences');
+            const data = await response.json();
+            return data;
+        }
+
+        function setCookie(name, value, days = 7) {
+            const expires = new Date(Date.now() + days * 864e5).toUTCString();
+            document.cookie = name + '=' + encodeURIComponent(value) + '; expires=' + expires + '; path=/';
+        }
+
+        function getCookie(name) {
+            return document.cookie.split('; ').reduce((r, v) => {
+                const parts = v.split('=');
+                return parts[0] === name ? decodeURIComponent(parts[1]) : r
+            }, '');
+        }
+
+        function createChart(skillName, labels, dataPoints) {
+            const canvas = document.createElement('canvas');
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.appendChild(canvas);
+
+            const heading = document.createElement('h2');
+            heading.textContent = skillName;
+
+            document.getElementById('charts').appendChild(heading);
+            document.getElementById('charts').appendChild(container);
+
+            const timeSeries = labels.map((timestamp, i) => ({ x: timestamp, y: dataPoints[i] }));
+
+            const iconUrl = `https://runescape.wiki/images/${skillName}_detail.png?0f0af`;
+            const iconImage = new Image();
+            iconImage.crossOrigin = 'anonymous';
+            iconImage.src = iconUrl;
+
+            iconImage.onload = () => {
+                drawChartWithIcon(iconImage);
+            };
+
+            iconImage.onerror = () => {
+                console.warn(`Icon for "${skillName}" failed to load. Rendering without it.`);
+                drawChartWithIcon(null);
+            };
+
+            function drawChartWithIcon(image) {
+                const backgroundIconPlugin = {
+                    id: 'backgroundIcon',
+                    afterDraw(chart) {
+                        const ctx = chart.ctx;
+                        const { chartArea } = chart;
+
+                        if (image && chartArea) {
+                            const iconSize = 100;
+                            const x = (chartArea.left + chartArea.right) / 2 - iconSize / 2;
+                            const y = (chartArea.top + chartArea.bottom) / 2 - iconSize / 2;
+
+                            ctx.save();
+                            ctx.globalAlpha = 0.1;
+                            ctx.drawImage(image, x, y, iconSize, iconSize);
+                            ctx.restore();
+                        }
+                    }
+                };
+
+                new Chart(canvas, {
+                    type: 'line',
+                    data: {
+                        datasets: [{
+                            label: skillName,
+                            data: timeSeries,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: true,
+                            tension: 0,
+                            pointRadius: 3,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    tooltipFormat: 'MMM d, yyyy HH:mm',
+                                    unit: 'day'
+                                },
+                                ticks: { color: '#555' },
+                                grid: { color: '#f3f4f6' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#555' },
+                                grid: { color: '#e5e7eb' }
+                            }
+                        }
+                    },
+                    plugins: [backgroundIconPlugin]
+                });
+            }
+        }
+
+
+        function getRandomColor(seed) {
+            const hash = Array.from(seed).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const hue = hash % 360;
+            return `hsl(${hue}, 70%, 50%)`;
+        }
+
+        function createCombinedChart(skills, timestamps, skillSeries, startDate = null, endDate = null, filter = 'all') {
+            const canvas = document.createElement('canvas');
+            const parent = document.createElement('div');
+            parent.className = 'charts';
+            const container = document.createElement('div');
+            container.className = 'chart-container';
+            container.style.marginBottom = '50px';
+            container.appendChild(canvas);
+            parent.appendChild(container);
+
+            const chartsContainer = document.getElementById('charts');
+            chartsContainer.parentNode.insertBefore(parent, chartsContainer);
+
+            const filteredTimestamps = timestamps.filter(ts => {
+                const date = new Date(ts);
+                return (!startDate || date >= new Date(startDate)) &&
+                    (!endDate || date <= new Date(endDate));
+            });
+
+            const datasets = skills.map(skill => {
+                const originalSeries = skillSeries[skill];
+                const indices = timestamps.map((ts, i) => ({ ts, i }))
+                    .filter(({ ts }) => filteredTimestamps.includes(ts))
+                    .map(({ i }) => i);
+
+                const filteredSeries = indices.map(i => originalSeries[i]);
+                const lastValue = filteredSeries[filteredSeries.length - 1];
+
+                if ((filter === 'positive' && lastValue < 0) ||
+                    (filter === 'negative' && lastValue > 0)) {
+                    return null; // Skip this skill
+                }
+
+                return {
+                    label: skill,
+                    data: indices.map(i => ({
+                        x: timestamps[i],
+                        y: originalSeries[i]
+                    })),
+                    borderColor: getRandomColor(skill),
+                    backgroundColor: 'transparent',
+                    fill: false,
+                    tension: 0,
+                    pointRadius: 0
+                };
+            }).filter(Boolean); // Remove null entries
+
+            const whiteBackgroundPlugin = {
+                id: 'whiteBackground',
+                beforeDraw: (chart) => {
+                    const ctx = chart.canvas.getContext('2d');
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'destination-over';
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, chart.width, chart.height);
+                    ctx.restore();
+                }
+            };
+
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'xy',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#333',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                tooltipFormat: 'MMM d, yyyy HH:mm',
+                                unit: 'day'
+                            },
+                            ticks: {
+                                color: '#555'
+                            },
+                            grid: {
+                                color: '#f3f4f6'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#555'
+                            },
+                            grid: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    }
+                },
+                plugins: [whiteBackgroundPlugin]
+            });
+        }
+
+        fetchData().then(rawData => {
+            const timestamps = Object.keys(rawData).sort();
+            const skills = Object.keys(rawData[timestamps[0]]);
+            const skillSeries = {};
+
+            for (const skill of skills) {
+                skillSeries[skill] = [];
+            }
+
+            for (const time of timestamps) {
+                const entry = rawData[time];
+                for (const skill of skills) {
+                    skillSeries[skill].push(entry[skill]);
+                }
+            }
+
+            function renderCharts(filter = 'all', startDate = null, endDate = null) {
+                const container = document.getElementById('charts');
+                container.innerHTML = '';
+
+                const filteredTimestamps = timestamps.filter(ts => {
+                    const date = new Date(ts);
+                    return (!startDate || date >= new Date(startDate)) &&
+                        (!endDate || date <= new Date(endDate));
+                });
+
+                const filteredSkillSeries = {};
+                for (const skill of skills) {
+                    const originalSeries = skillSeries[skill];
+                    const indices = timestamps.map((ts, i) => ({ ts, i }))
+                        .filter(({ ts }) => filteredTimestamps.includes(ts))
+                        .map(({ i }) => i);
+
+                    filteredSkillSeries[skill] = indices.map(i => originalSeries[i]);
+                }
+
+                const sortedSkills = skills.slice().sort((a, b) => {
+                    const aValues = filteredSkillSeries[a];
+                    const bValues = filteredSkillSeries[b];
+                    const lastA = aValues[aValues.length - 1] ?? 0;
+                    const lastB = bValues[bValues.length - 1] ?? 0;
+                    return Math.abs(lastA) - Math.abs(lastB);
+                });
+
+                for (const skill of sortedSkills) {
+                    const lastValue = filteredSkillSeries[skill][filteredSkillSeries[skill].length - 1];
+                    if ((filter === 'positive' && lastValue < 0) ||
+                        (filter === 'negative' && lastValue > 0)) {
+                        continue;
+                    }
+                    createChart(skill, filteredTimestamps, filteredSkillSeries[skill]);
+                }
+            }
+
+            // Restore saved filter & dates
+            const savedFilter = getCookie('filter') || 'all';
+            const savedStart = getCookie('startDate');
+            const savedEnd = getCookie('endDate');
+            document.getElementById('filter').value = savedFilter;
+            if (savedStart) document.getElementById('start-date').value = savedStart;
+            if (savedEnd) document.getElementById('end-date').value = savedEnd;
+
+            // Initial charts
+            createCombinedChart(skills, timestamps, skillSeries, savedStart, savedEnd);
+            renderCharts(savedFilter, savedStart, savedEnd);
+
+            // Event listeners
+            document.getElementById('filter').addEventListener('change', () => {
+                document.getElementById('apply-date-filter').click();
+            });
+
+            document.getElementById('apply-date-filter').addEventListener('click', () => {
+                const filter = document.getElementById('filter').value;
+                const start = document.getElementById('start-date').value;
+                const end = document.getElementById('end-date').value;
+
+                setCookie('filter', filter);
+                setCookie('startDate', start);
+                setCookie('endDate', end);
+
+                const oldCombined = document.querySelector('.charts:not(#charts)');
+                if (oldCombined) oldCombined.remove();
+
+                createCombinedChart(skills, timestamps, skillSeries, start, end, filter);
+                renderCharts(filter, start, end);
+            });
+        });
+    </script>
+</body>
+</html>

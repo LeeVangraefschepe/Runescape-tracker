@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Runescape_tracker.DataStructures
+namespace Runescape_tracker.Runemetrics
 {
     public class PlayerData
     {
