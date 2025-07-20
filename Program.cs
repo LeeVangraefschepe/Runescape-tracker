@@ -5,6 +5,7 @@ using Runescape_tracker.Runemetrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using Runescape_tracker.Business;
 
 namespace Runescape_tracker
 {
@@ -77,58 +78,15 @@ namespace Runescape_tracker
                 .UseNpgsql(connectionString)
                 .Options;
 
+            SkillController skillController = new SkillController();
+
             // GET /api/skillvalues?username=...&from=...&to=...
             app.MapGet("/api/skillvalues", async (
                 [FromQuery] string username,
                 [FromQuery] DateTime? from,
                 [FromQuery] DateTime? to) =>
             {
-                await using var db = new AppDbContext(dbOptions);
-
-                var user = await db.Users.FirstOrDefaultAsync(u => u.Name == username);
-
-                if (user == null)
-                    return Results.NotFound("User not found");
-
-                var userSkills = await db.Skills
-                    .Include(s => s.SkillXps)
-                    .Include(s => s.Fetch)
-                    .Where(s => s.UserId == user.Id)
-                    .Where(s =>
-                        (!from.HasValue || s.Fetch.FetchTime >= from.Value) &&
-                        (!to.HasValue || s.Fetch.FetchTime <= to.Value))
-                    .OrderBy(s => s.Fetch.FetchTime)
-                    .ToListAsync();
-
-                var result = userSkills.Select(s => new
-                {
-                    timestamp = s.Fetch.FetchTime,
-                    skillXp = s.SkillXps.ToDictionary(x => x.Skill.ToString(), x => x.Xp)
-                }).ToList();
-
-                var lastResult = result.Last();
-
-                foreach (Skill skillEnum in Enum.GetValues(typeof(Skill)))
-                {
-                    var enumKey = skillEnum.ToString();
-
-                    if (lastResult.skillXp.ContainsKey(enumKey)) continue;
-
-                    long value = -1;
-                    foreach (var fetch in result)
-                    {
-                        if (!fetch.skillXp.ContainsKey(enumKey)) continue;
-
-                        value = fetch.skillXp[enumKey];
-                    }
-
-                    if (value == -1) continue;
-
-                    lastResult.skillXp.Add(enumKey, value);
-                }
-
-
-                // Make sure that the last timestamp has all the skill values aswell.
+                var result = await skillController.GetSkillValues(dbOptions, username, from, to);
                 return Results.Ok(result);
             });
 
