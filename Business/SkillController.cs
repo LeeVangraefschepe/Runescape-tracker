@@ -88,6 +88,8 @@ namespace Runescape_tracker.Business
             var user0Skills = await user0Task;
             var user1Skills = await user1Task;
 
+            List<SkillValues> result = new List<SkillValues>();
+
             foreach (var skills in user0Skills)
             {
                 // Check if both parties have a record
@@ -100,19 +102,28 @@ namespace Runescape_tracker.Business
                 // Fix missing records in user
                 FixBrokenDifference(matchingSkills, skills, user0Skills);
 
-                // Overwrite user 0 data to user for the difference
+                // Create new adjusted record
+                var newSkillValues = new SkillValues
+                {
+                    Timestamp = skills.Timestamp,
+                    SkillXp = new Dictionary<string, long>()
+                };
+
+                // Fill in new record data
                 foreach (var skill in skills.SkillXp.Keys.ToList())
                 {
                     var original = skills.SkillXp[skill];
                     var other = matchingSkills.SkillXp[skill];
-                    var result = original - other;
+                    var xpResult = original - other;
 
-                    skills.SkillXp[skill] = result;
+                    newSkillValues.SkillXp.Add(skill, xpResult);
                 }
+
+                result.Add(newSkillValues);
             }
 
-            ResortResult(user0Skills);
-            return user0Skills;
+            ResortResult(result);
+            return result;
         }
 
         private void FixBrokenDifference(SkillValues source, SkillValues target, List<SkillValues> allTargetSkills)
