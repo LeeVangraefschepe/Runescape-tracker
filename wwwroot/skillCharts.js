@@ -1,10 +1,12 @@
 async function fetchData(username) {
-    const res = await fetch(`http://localhost:999/api/skillvalues?username=${username}`);
+    const host = window.location.hostname;
+    const res = await fetch(`http://${host}:999/api/skillvalues?username=${username}`);
     return await res.json();
 }
 
 async function fetchCompareData(username, otherUsername) {
-    const res = await fetch(`http://localhost:999/api/skillvalues?username=${username}&otherUser=${otherUsername}`);
+    const host = window.location.hostname;
+    const res = await fetch(`http://${host}:999/api/skillvalues?username=${username}&otherUser=${otherUsername}`);
     return await res.json();
 }
 
