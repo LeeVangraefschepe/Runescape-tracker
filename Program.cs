@@ -101,10 +101,28 @@ namespace Runescape_tracker
                 return Results.Ok(result);
             });
 
+            app.MapGet("/api/users", async () =>
+            {
+                // Create db connection
+                await using var db = new AppDbContext(dbOptions);
+
+                // Get all users from db
+                var users = await db.Users.ToListAsync();
+
+                // Get only the names
+                List<string> usernames = new List<string>();
+                foreach (var user in users)
+                {
+                    usernames.Add(user.Name);
+                }
+
+                return usernames;
+            });
+
             app.UseDefaultFiles(); // for serving static index.html if needed
             app.UseStaticFiles();
 
-            app.Run("http://localhost:999");
+            app.Run("http://+:999");
         }
     }
 }
