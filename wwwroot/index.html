@@ -1,181 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Skill Progress Over Time</title>
-    <link rel="icon" href="https://runescape.wiki/images/thumb/Statistics.png/21px-Statistics.png?72ca5" type="image/png">
+    <link rel="icon" href="https://runescape.wiki/images/thumb/Statistics.png/21px-Statistics.png?72ca5"
+        type="image/png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div class="sidebar">
         <h2>Accounts</h2>
-        <div class="nav-link active" data-target="lee_vgs" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">lee_vgs</div>
+        <div class="nav-link" data-target="lee_vgs" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">lee_vgs</div>
         <div class="nav-link" data-target="tomaatje2002" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">tomaatje2002</div>
         <div class="nav-link" data-target="StellaArtois" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">StellaArtois</div>
     </div>
-    
-      <div class="main-content">
 
-<h1 id="content-title">Skill XP Over Time - lee_vgs</h1>
-<div id="charts"></div>
+    <div class="main-content">
 
-<script>
-    function switchSection(element) {
-      // Update sidebar active
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-      });
-      element.classList.add('active');
+        <h1 id="content-title">Select an account to view</h1>
+        <div id="charts"></div>
 
-      // Show corresponding section
-      const target = element.getAttribute('data-target');
-      console.log(target);
-      document.querySelectorAll('.content-section').forEach(section => {
-        section.classList.remove('active');
-      });
+        <script>
+            function switchSection(element) {
+                // Update sidebar active
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                element.classList.add('active');
 
-      // Remove all charts
-      document.getElementById('charts').innerHTML = '';
+                // Show corresponding section
+                const target = element.getAttribute('data-target');
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
 
-      // Set new title
-      document.getElementById('content-title').innerHTML = `Skill XP Over Time - ${target}`;
+                // Remove all charts
+                document.getElementById('charts').innerHTML = '';
 
-      // Fetch new ones
-        fetchData(target).then(data => {
-            const skillData = processData(data);
-            Object.entries(skillData).forEach(([skill, points]) => {
-                drawChart(skill, points);
-            });
-        }).catch(err => {
-            console.error(err);
-        });
-    }
-</script>
+                // Stop doing anything if empty
+                if (target === "") return;
 
-<script>
-    async function fetchData(username) {
-        const res = await fetch(`http://localhost:999/api/skillvalues?username=${username}`);
-        return await res.json();
-    }
+                // Set new title
+                document.getElementById('content-title').innerHTML = `Skill XP Over Time - ${target}`;
 
-    function getRandomColor(seed) {
-        const hash = Array.from(seed).reduce((acc, c) => acc + c.charCodeAt(0), 0);
-        const hue = hash % 360;
-        return `hsl(${hue}, 70%, 50%)`;
-    }
-
-    function drawChart(skill, dataPoints) {
-        const container = document.createElement('div');
-        container.className = 'chart-container';
-        const canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-        const heading = document.createElement('h2');
-        heading.textContent = skill;
-        document.getElementById('charts').appendChild(heading);
-        document.getElementById('charts').appendChild(container);
-
-
-
-        const image = new Image();
-        image.src = `https://runescape.wiki/images/${skill}_detail.png?0f0af`;
-        image.crossOrigin = 'anonymous';
-
-        image.onload = () => renderChart(image);
-        image.onerror = () => renderChart(null);
-
-        function renderChart(icon) {
-            const backgroundIconPlugin = {
-                id: 'backgroundIcon',
-                afterDraw(chart) {
-                    if (!icon) return;
-                    const ctx = chart.ctx;
-                    const { chartArea } = chart;
-                    const size = 100;
-                    const x = (chartArea.left + chartArea.right) / 2 - size / 2;
-                    const y = (chartArea.top + chartArea.bottom) / 2 - size / 2;
-                    ctx.save();
-                    ctx.globalAlpha = 0.2;
-                    ctx.drawImage(icon, x, y, size, size);
-                    ctx.restore();
-                }
-            };
-
-            new Chart(canvas, {
-                type: 'line',
-                data: {
-                    datasets: [{
-                        label: `${skill} Total XP`,
-                        data: dataPoints,
-                        borderColor: getRandomColor(skill),
-                        backgroundColor: 'rgba(0, 0, 0, 0.05)',
-                        fill: true,
-                        tension: 0.1,
-                        pointRadius: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                tooltipFormat: 'MMM d, yyyy HH:mm',
-                                unit: 'day'
-                            },
-                            ticks: { color: '#444' },
-                            grid: { color: '#eee' }
-                        },
-                        y: {
-                            title: { display: false, text: 'Total XP' },
-                            beginAtZero: false,
-                            ticks: { color: '#444' },
-                            grid: { color: '#eee' }
-                        }
-                    }
-                },
-                plugins: [backgroundIconPlugin]
-            });
-        }
-    }
-
-    function processData(rawData) {
-        // Ensure entries are sorted
-        rawData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-        const skillMap = {};
-
-        for (const entry of rawData) {
-            const timestamp = entry.timestamp;
-            for (const [skill, xp] of Object.entries(entry.skillXp)) {
-                if (!skillMap[skill]) skillMap[skill] = [];
-                skillMap[skill].push({
-                    x: timestamp,
-                    y: xp
+                // Fetch new ones
+                fetchData(target).then(data => {
+                    const skillData = processData(data);
+                    Object.entries(skillData).forEach(([skill, points]) => {
+                        drawChart(skill, points);
+                    });
+                }).catch(err => {
+                    console.error(err);
                 });
             }
-        }
-
-        return skillMap;
-    }
-
-    fetchData('lee_vgs').then(data => {
-        const skillData = processData(data);
-        Object.entries(skillData).forEach(([skill, points]) => {
-            drawChart(skill, points);
-        });
-    }).catch(err => {
-        document.body.innerHTML = `<p style="color:red">Failed to load data.</p>`;
-        console.error(err);
-    });
-</script>
+        </script>
+        <script src="skillCharts.js"></script>
 
 </body>
+
 </html>
