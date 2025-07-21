@@ -87,6 +87,7 @@ namespace Runescape_tracker
                 [FromQuery] DateTime? to) =>
             {
                 var result = await skillController.GetSkillValues(dbOptions, username, from, to);
+                result = await skillController.GetSkillDifferences(dbOptions, username, "tomaatje2002", from, to);
                 return Results.Ok(result);
             });
 

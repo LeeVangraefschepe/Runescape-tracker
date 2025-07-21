@@ -73,7 +73,12 @@
         container.className = 'chart-container';
         const canvas = document.createElement('canvas');
         container.appendChild(canvas);
+        const heading = document.createElement('h2');
+        heading.textContent = skill;
+        document.getElementById('charts').appendChild(heading);
         document.getElementById('charts').appendChild(container);
+
+
 
         const image = new Image();
         image.src = `https://runescape.wiki/images/${skill}_detail.png?0f0af`;
@@ -129,7 +134,7 @@
                             grid: { color: '#eee' }
                         },
                         y: {
-                            title: { display: true, text: 'Total XP' },
+                            title: { display: false, text: 'Total XP' },
                             beginAtZero: false,
                             ticks: { color: '#444' },
                             grid: { color: '#eee' }

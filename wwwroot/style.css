@@ -4,9 +4,18 @@
     padding: 0;
   }
 
-  #charts > div {
-  height: 200px;
-  margin-bottom: 2rem;
+.main-content > h1{
+  margin-bottom: 25px;
+}
+
+.chart-container {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  height: 800px; /* Set consistent height */
+  position: relative; /* Needed for responsive canvas */
 }
 
 canvas {
