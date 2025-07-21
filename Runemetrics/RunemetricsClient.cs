@@ -31,6 +31,9 @@ namespace Runescape_tracker.Runemetrics
                 // Fetch user data from Runescape API
                 var result = await GetProfileAsync(user.Name);
 
+                // Fetch failed continue
+                if (result.SkillValues == null) continue;
+
                 // Query Fetches -> Skills -> Xp on Username
                 var userSkills = await db.Skills
                     .Include(s => s.SkillXps)
