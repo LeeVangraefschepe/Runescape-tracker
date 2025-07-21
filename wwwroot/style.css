@@ -142,3 +142,16 @@ body {
   font-size: 0.9em;
   color: #555;
 }
+
+.compare-section {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#compareSelect {
+  padding: 5px;
+}
+#compareButton {
+  padding: 5px 10px;
+}

@@ -6,7 +6,7 @@ async function fetchData(username) {
 
 async function fetchCompareData(username, otherUsername) {
     const host = window.location.hostname;
-    const res = await fetch(`http://${host}:999/api/skillvalues?username=${username}&otherUser=${otherUsername}`);
+    const res = await fetch(`http://${host}:999/api/skilldifference?username=${username}&otherUser=${otherUsername}`);
     return await res.json();
 }
 
@@ -14,6 +14,10 @@ function getRandomColor(seed) {
     const hash = Array.from(seed).reduce((acc, c) => acc + c.charCodeAt(0), 0);
     const hue = hash % 360;
     return `hsl(${hue}, 70%, 50%)`;
+}
+
+function clearCharts() {
+    document.getElementById('charts').innerHTML = '';
 }
 
 function drawChart(skill, dataPoints) {

@@ -16,14 +16,24 @@
 
     <div class="sidebar">
         <h2>Accounts</h2>
-        <div class="nav-link" data-target="lee_vgs" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">lee_vgs</div>
-        <div class="nav-link" data-target="tomaatje2002" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">tomaatje2002</div>
-        <div class="nav-link" data-target="StellaArtois" onclick="switchSection(this)"><img src="images/default_chat.png" class="nav-icon">StellaArtois</div>
+        <div class="nav-link" data-target="lee_vgs" onclick="switchSection(this)"><img src="images/default_chat.png"
+                class="nav-icon">lee_vgs</div>
+        <div class="nav-link" data-target="tomaatje2002" onclick="switchSection(this)"><img
+                src="images/default_chat.png" class="nav-icon">tomaatje2002</div>
+        <div class="nav-link" data-target="StellaArtois" onclick="switchSection(this)"><img
+                src="images/default_chat.png" class="nav-icon">StellaArtois</div>
     </div>
 
     <div class="main-content">
 
         <h1 id="content-title">Select an account to view</h1>
+        <div class="compare-section">
+            <label for="compareSelect">Compare with:</label>
+            <select id="compareSelect">
+                <option value="" disabled selected>Select a user</option>
+            </select>
+            <button id="compareButton">Compare</button>
+        </div>        
         <div id="charts"></div>
 
         <script>
@@ -40,8 +50,7 @@
                     section.classList.remove('active');
                 });
 
-                // Remove all charts
-                document.getElementById('charts').innerHTML = '';
+                clearCharts();
 
                 // Stop doing anything if empty
                 if (target === "") return;
@@ -61,8 +70,10 @@
             }
         </script>
         <script src="skillCharts.js"></script>
-        <script src="sidebarLoader.js"></script>
+        <script src="contentLoader.js"></script>
+        <script src="compareLogic.js"></script>
 
+    </div>
 </body>
 
 </html>
