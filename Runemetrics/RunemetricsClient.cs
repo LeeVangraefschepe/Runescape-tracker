@@ -86,8 +86,8 @@ namespace Runescape_tracker.Runemetrics
                         continue;
                     }
 
-                    // Skill has different value now add it
-                    if (storedSkillValues[skillEntry.Skill] != skillEntry.Xp)
+                    // New skill value is larger (xp can only go up)
+                    if (storedSkillValues[skillEntry.Skill] < skillEntry.Xp)
                     {
                         skillEntries.Add(new SkillXp
                         {
