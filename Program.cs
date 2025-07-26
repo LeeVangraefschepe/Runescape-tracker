@@ -13,14 +13,19 @@ namespace Runescape_tracker
     {
         static async Task Main(string[] args)
         {
+            string jsonPath = "appsettings.Development.json";
+            if (Environment.GetEnvironmentVariable("IS_DOCKER") != null)
+                jsonPath = "appsettings.Docker.json";
+
             // Load configuration
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile(jsonPath)
                 .Build();
 
             // Read connection string
             var connectionString = config.GetConnectionString("DefaultConnection");
+            Console.WriteLine($"Found the following connection string:\n{connectionString}");
 
             // Configure EF Core
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
@@ -52,7 +57,7 @@ namespace Runescape_tracker
             });
 
             // Start Web Server in background
-            Task webServerTask = Task.Run(() => StartWebServer());
+            Task webServerTask = Task.Run(() => StartWebServer(connectionString));
 
             // Keep application open
             while (true)
@@ -61,18 +66,10 @@ namespace Runescape_tracker
             }
         }
 
-        static void StartWebServer()
+        static void StartWebServer(string connectionString)
         {
             var builder = WebApplication.CreateBuilder();
             var app = builder.Build();
-
-            // Configure DB
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
-                .Build();
-
-            var connectionString = config.GetConnectionString("DefaultConnection");
 
             var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
                 .UseNpgsql(connectionString)

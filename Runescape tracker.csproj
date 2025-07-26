@@ -22,7 +22,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
 	<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	<None Update="appsettings.json">
+	<None Update="appsettings.Docker.json">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
+	<None Update="appsettings.Development.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</None>
 	<Content Include="wwwroot\**\*">
