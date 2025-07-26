@@ -20,7 +20,7 @@ function clearCharts() {
     document.getElementById('charts').innerHTML = '';
 }
 
-function drawChart(skill, dataPoints) {
+function drawChart(skill, dataPoints, difference) {
     const container = document.createElement('div');
     container.className = 'chart-container';
     const canvas = document.createElement('canvas');
@@ -87,7 +87,7 @@ function drawChart(skill, dataPoints) {
                     },
                     y: {
                         title: { display: false, text: 'Total XP' },
-                        beginAtZero: false,
+                        beginAtZero: difference,
                         ticks: { color: '#444' },
                         grid: { color: '#eee' }
                     }

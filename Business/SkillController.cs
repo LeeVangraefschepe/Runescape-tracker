@@ -36,6 +36,12 @@ namespace Runescape_tracker.Business
                 SkillXp = s.SkillXps.ToDictionary(x => x.Skill.ToString(), x => x.Xp)
             }).ToList();
 
+            // Also add total xp as SkillXp in dictionary
+            for (int i = 0; i < userSkills.Count; i++)
+            {
+                result[i].SkillXp.Add("Total", userSkills[i].TotalXp * 10);
+            }
+
             // Take reference to last result
             var lastResult = result.Last();
 

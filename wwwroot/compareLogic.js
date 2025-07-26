@@ -24,7 +24,7 @@ document.getElementById('compareButton').addEventListener('click', () => {
     fetchCompareData(target, selectedUser).then(data => {
         const skillData = processData(data);
         Object.entries(skillData).forEach(([skill, points]) => {
-            drawChart(skill, points);
+            drawChart(skill, points, true);
         });
     }).catch(err => {
         console.error(err);

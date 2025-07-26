@@ -62,7 +62,7 @@
                 fetchData(target).then(data => {
                     const skillData = processData(data);
                     Object.entries(skillData).forEach(([skill, points]) => {
-                        drawChart(skill, points);
+                        drawChart(skill, points, false);
                     });
                 }).catch(err => {
                     console.error(err);

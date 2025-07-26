@@ -25,6 +25,7 @@ namespace Runescape_tracker
 
             // Read connection string
             var connectionString = config.GetConnectionString("DefaultConnection");
+            if (connectionString == null) throw new NullReferenceException("Connection string is null");
             Console.WriteLine($"Found the following connection string:\n{connectionString}");
 
             // Configure EF Core
@@ -32,7 +33,7 @@ namespace Runescape_tracker
             optionsBuilder.UseNpgsql(connectionString);
 
             // Create DB context
-            using var db = new AppDbContext(optionsBuilder.Options);
+            await using var db = new AppDbContext(optionsBuilder.Options);
 
             // Start background task for fetching every 15m
             _ = Task.Run(async () =>
@@ -41,6 +42,8 @@ namespace Runescape_tracker
 
                 while (true)
                 {
+                    if (Environment.GetEnvironmentVariable("IS_DOCKER") == null) break;
+
                     try
                     {
                         Console.WriteLine($"[{DateTime.Now}] Starting fetch...");
@@ -57,7 +60,7 @@ namespace Runescape_tracker
             });
 
             // Start Web Server in background
-            Task webServerTask = Task.Run(() => StartWebServer(connectionString));
+            _ = Task.Run(() => StartWebServer(connectionString));
 
             // Keep application open
             while (true)

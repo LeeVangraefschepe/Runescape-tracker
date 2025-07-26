@@ -25,6 +25,7 @@ bld/
 [Ll]ogs/
 .idea/
 appsettings.*
+*.tar
 
 # .NET Core
 project.lock.json
