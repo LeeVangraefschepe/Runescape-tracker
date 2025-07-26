@@ -63,16 +63,50 @@ namespace Runescape_tracker.Business
                 lastResult.SkillXp.Add(enumKey, value);
             }
 
+            // Prevent stalled skills to have a overtime increase graph
+            for (int i = result.Count - 1; i > 0; --i)
+            {
+                var record = result[i];
+                var previousRecord = result[i - 1];
+
+                foreach (var skill in record.SkillXp)
+                {
+                    if (previousRecord.SkillXp.ContainsKey(skill.Key)) continue;
+
+                    // Search for closest record before this previous one
+                    SkillValues? closestPreviousRecord = null;
+                    for (int j = i - 2; j >= 0; --j)
+                    {
+                        var oldRecord = result[j];
+                        if (!oldRecord.SkillXp.ContainsKey(skill.Key)) continue;
+
+                        closestPreviousRecord = oldRecord;
+                        break;
+                    }
+
+                    // If no result found so be it and skip
+                    if (closestPreviousRecord == null) continue;
+
+                    // Also skip if it is the same value
+                    var value = closestPreviousRecord.SkillXp[skill.Key];
+                    if (value == skill.Value) continue;
+
+                    previousRecord.SkillXp.Add(skill.Key, closestPreviousRecord.SkillXp[skill.Key]);
+                }
+            }
+
             // Devide all values towards 10
             foreach (var record in result)
             {
-                foreach (var skill in record.SkillXp.Keys.ToList())
+                foreach (var skill in record.SkillXp.Keys)
                 {
                     record.SkillXp[skill] /= 10;
                 }
             }
 
+            // Resort all dictionary skills
             ResortResult(result);
+
             return result;
         }
 
@@ -139,7 +173,13 @@ namespace Runescape_tracker.Business
             // Search most recent fetch of the missing skill
             foreach (var missingSkill in missingSkills)
             {
-                foreach (var targetSkill in allTargetSkills)
+                var allTargetSkillsReverse = allTargetSkills.ToList();
+                allTargetSkillsReverse.Reverse();
+
+                bool found = false;
+
+                // Try to match with closest record in the past
+                foreach (var targetSkill in allTargetSkillsReverse)
                 {
                     // Skip records that are in the future of the fetch
                     if (targetSkill.Timestamp > source.Timestamp) continue;
@@ -149,9 +189,30 @@ namespace Runescape_tracker.Business
 
                     // Update target record with missing skill
                     target.SkillXp.Add(missingSkill, targetSkill.SkillXp[missingSkill]);
+                    found = true;
 
                     break;
                 }
+
+                if (found) continue;
+
+                // Problem: There are no records in the past of this skill. Taking closest one in the future
+                foreach (var targetSkill in allTargetSkills)
+                {
+                    // Skip records that do not contain the missing skill
+                    if (!targetSkill.SkillXp.ContainsKey(missingSkill)) continue;
+
+                    // Update target record with missing skill
+                    target.SkillXp.Add(missingSkill, targetSkill.SkillXp[missingSkill]);
+                    found = true;
+
+                    break;
+                }
+
+                if (found) continue;
+
+                // Problem: There is also no record of this skill in the future. Deleting skill from record
+                source.SkillXp.Remove(missingSkill);
             }
         }
 
