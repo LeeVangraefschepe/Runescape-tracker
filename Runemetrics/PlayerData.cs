@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Newtonsoft.Json.Converters;
 
 namespace Runescape_tracker.Runemetrics
 {
@@ -47,6 +48,7 @@ namespace Runescape_tracker.Runemetrics
         public Skill Skill { get; set; }
     }
 
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum Skill
     {
         Attack = 0,

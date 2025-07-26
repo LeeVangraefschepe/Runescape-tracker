@@ -79,6 +79,7 @@ namespace Runescape_tracker
                 .Options;
 
             SkillController skillController = new SkillController();
+            SkillOverviewController skillOverviewController = new SkillOverviewController();
 
             // GET /api/skillvalues?username=...&from=...&to=...
             app.MapGet("/api/skillvalues", async (
@@ -87,7 +88,8 @@ namespace Runescape_tracker
                 [FromQuery] DateTime? to) =>
             {
                 var result = await skillController.GetSkillValues(dbOptions, username, from, to);
-                return Results.Ok(result);
+                var overview = skillOverviewController.CreateSkillOverview(result);
+                return Results.Ok(overview);
             });
 
             // GET /api/skilldifference?username=...&otherUser=...&from=...&to=...
@@ -98,7 +100,8 @@ namespace Runescape_tracker
                 [FromQuery] DateTime? to) =>
             {
                 var result = await skillController.GetSkillDifferences(dbOptions, username, otherUser, from, to);
-                return Results.Ok(result);
+                var overview = skillOverviewController.CreateSkillOverview(result);
+                return Results.Ok(overview);
             });
 
             app.MapGet("/api/users", async () =>
